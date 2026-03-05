@@ -43,6 +43,7 @@ def get_credentials():
         "TWITTER_user_name": os.getenv("TWITTER_user_name"),
         "TWITTER_email":     os.getenv("TWITTER_email"),
         "TWITTER_pwd":       os.getenv("TWITTER_pwd"),
+        "TWITTER_phone":     os.getenv("TWITTER_phone", ""),
     }
 
 def get_prompt():

@@ -1,13 +1,10 @@
-import os
-import sys
+import os, sys
 sys.path.append(os.path.abspath('.'))
-
-from interface.actionInterface import actionInterface
 from src.xBridge import xBridge
 from src.logs import logs
 from src.memory import memory as MemoryStore
 
-class actionX(actionInterface):
+class actionX:
     def __init__(self):
         self.xBridge_instance = xBridge()
         self.logs = logs()
@@ -17,25 +14,25 @@ class actionX(actionInterface):
         target_tweet_id = action.get('target_tweet_id', '')
         action_type = action.get('action', '')
         content = action.get('content', '')
+        if not content:
+            self.logs.log_error('No content in action'); return
+
+        # Enforce 280 char limit
+        content = content[:280]
 
         if action_type in ('tweet', 'post'):
-            self.xBridge_instance.tweet(message=content)
-        elif action_type == 'reply':
-            self.xBridge_instance.reply(tweet_id=target_tweet_id, message=content)
-        elif action_type == 'quote':
-            self.xBridge_instance.quote(tweet_id=target_tweet_id, message=content)
+            self.xBridge_instance.tweet(text=content)
+        elif action_type == 'reply' and target_tweet_id:
+            # Replies to mentions are allowed on free tier
+            self.xBridge_instance.reply(
+                in_reply_to_tweet_id=target_tweet_id, text=content)
+        elif action_type == 'quote' and target_tweet_id:
+            self.xBridge_instance.quote(
+                quote_tweet_id=target_tweet_id, text=content)
         else:
-            self.logs.log_error(f'Unknown action type: {action_type}')
-            return
+            # Fallback to plain post
+            self.xBridge_instance.tweet(text=content)
 
-        # Persist to memory
         self.memory_store.add_entry(action_type, content)
-
-    def reply(self, tweet_id, message, image_path=None):
-        self.xBridge_instance.reply(tweet_id, message, image_path)
-
-    def quote(self, tweet_id, message, image_path=None):
-        self.xBridge_instance.quote(tweet_id, message, image_path)
-
-    def tweet(self, message, image_path=None):
-        self.xBridge_instance.tweet(message, image_path=image_path)
+        self.logs.log_info(
+            f"{action_type}: {content[:120]}", "bold yellow", "Action")

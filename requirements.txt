@@ -1,17 +1,24 @@
 # Core
 anthropic>=0.25.0
 python-dotenv>=0.19.1
+
 # Web server
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
-# Twitter - 4.14 uses imghdr (removed in Python 3.13+), use 4.15+
+
+# Twitter API (posting via official API)
 tweepy>=4.15.0
-selenium==4.4.3
-webdriver-manager>=4.0.0
-fake-headers>=1.0.2
+
+# Browser automation — Playwright ships its own Chromium, no system browser needed
+playwright>=1.40.0
+
 # Data
 pandas>=2.0.0
+fake-headers>=1.0.2
+
 # UI
 rich>=13.9.4
+
 # WebSocket
 websockets>=12.0
+aiofiles

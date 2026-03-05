@@ -31,5 +31,5 @@ services:
         value: "8000"
       - key: DATA_DIR
         value: "/data"
-      - key: CHROME_BINARY_PATH
-        value: "/usr/bin/google-chrome-stable"
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "/opt/render/project/src/.playwright"
