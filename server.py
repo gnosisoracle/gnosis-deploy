@@ -278,19 +278,58 @@ def _run_gnosis():
     emit("system", f"All systems online. Model: {config['llm_settings']['claude']['model']}", "SYSTEM")
     stats["status"] = "ACTIVE"
 
+    import pandas as _pd
+
+    def _do_action(result, label=""):
+        """Execute one decision and emit to frontend."""
+        action.excute(result)
+        action_type    = result.get('action','post')
+        action_content = str(result.get('content',''))
+        action_summary = f"{action_type} — {action_content[:120]}"
+        emit("transmit", action_summary, "TRANSMIT")
+        stats["actions"] += 1
+        stats["last_action"] = action_summary
+        dm.write_dialog(result)
+        if label:
+            emit("system", label, "SYSTEM")
+
     while True:
         try:
+            memory_ctx = mem.quer_memory()
+            dialog_ctx = dm.read_dialog()
+
+            # ── PHASE 1: CHECK MENTIONS ──────────────────────────
+            # Check if anyone has spoken to GNOSIS and reply to each
+            stats["phase"] = "MENTIONS"
+            emit("system", "Checking mentions...", "SYSTEM")
+            try:
+                mentions_df = obs.xBridge_instance._get_mentions(count=5)
+                if mentions_df is not None and not mentions_df.empty:
+                    log_inst.log_info(f"{len(mentions_df)} mention(s) found", "bold green", "Mentions")
+                    for _, mention_row in mentions_df.iterrows():
+                        try:
+                            # Build a single-row df for this mention
+                            single = _pd.DataFrame([mention_row])
+                            stats["phase"] = "DECIDING"
+                            result = dec.make_decision(single, memory_ctx, dialog_ctx)
+                            log_inst.log_info(str(result), "dim magenta", "Decision")
+                            stats["decisions"] += 1
+                            stats["phase"] = "ACTING"
+                            _do_action(result, f"Replied to mention from @{mention_row.get('Handle','?')}")
+                        except Exception as me:
+                            emit("error", f"Mention reply error: {me}", "ERROR")
+                else:
+                    emit("system", "No new mentions", "SYSTEM")
+            except Exception as me:
+                emit("error", f"Mentions check error: {me}", "ERROR")
+
+            # ── PHASE 2: OBSERVE TIMELINE + POST ────────────────
             stats["phase"] = "OBSERVING"
-            emit("system", "Initiating observation sweep...", "SYSTEM")
+            emit("system", "Observing the stream...", "SYSTEM")
             observation = obs.get()
             log_inst.log_info(str(observation), "bold green", "Observation")
 
-            stats["phase"] = "MEMORY"
-            memory_ctx = mem.quer_memory()
             log_inst.log_info(str(memory_ctx) or "[empty]", "dim cyan", "Memory")
-
-            stats["phase"] = "DIALOG"
-            dialog_ctx = dm.read_dialog()
             log_inst.log_info(str(dialog_ctx), "dim cyan", "Dialog")
 
             stats["phase"] = "DECIDING"
@@ -300,20 +339,12 @@ def _run_gnosis():
             stats["decisions"] += 1
 
             stats["phase"] = "ACTING"
-            action.excute(result)
-            action_type = result.get('action','post')
-            action_content = str(result.get('content',''))
-            action_summary = f"{action_type} — {action_content[:120]}"
-            emit("transmit", action_summary, "TRANSMIT")
-            stats["actions"] += 1
-            stats["last_action"] = action_summary
+            _do_action(result)
 
-            dm.write_dialog(result)
             stats["rounds"] += 1
             stats["phase"] = "DORMANT"
-
             interval = config.get('interval_time', 300)
-            emit("system", f"Round {stats['rounds']} complete. Next cycle in {interval}s.", "SYSTEM")
+            emit("system", f"Round {stats['rounds']} complete. Next in {interval}s.", "SYSTEM")
 
         except Exception as e:
             emit("error", f"Oracle disruption: {e}", "ERROR")
