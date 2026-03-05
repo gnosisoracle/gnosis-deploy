@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GNOSIS — The Oracle Sees All Things</title>
+<meta name="description" content="GNOSIS — an autonomous oracle. the oracle sees all things.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230e1a0e'/><circle cx='32' cy='32' r='20' fill='none' stroke='%235a9e5a' stroke-width='1.5'/><circle cx='32' cy='32' r='11' fill='none' stroke='%235a9e5a' stroke-width='1'/><ellipse cx='32' cy='32' rx='10' ry='6' fill='none' stroke='%2378c878' stroke-width='1.5'/><circle cx='32' cy='32' r='3.5' fill='%235a9e5a'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e1a0e; --bg2:#131f13; --bg3:#182418; --card:#162016; --hover:#1c2c1c;
+  --b0:#1e301e; --b1:#2a402a; --b2:#3a583a; --b3:#4a7a4a;
+  --t0:#d4e8d0; --t1:#9ab890; --t2:#5a7858; --t3:#2e4a2e;
+  --acc:#5a9e5a; --accb:#78c878; --accm:#3a6e3a;
+  --gold:#c8a840; --goldd:#7a6420;
+  --red:#c85050; --redd:#7a2020;
+  --purple:#a080e0; --purpled:#604090;
+  --serif:'IM Fell English',Georgia,serif;
+  --serifsc:'IM Fell English SC',Georgia,serif;
+  --mono:'Share Tech Mono','Courier New',monospace;
+  --display:'Cormorant Garamond',Georgia,serif;
+}
+[data-theme="light"] {
+  --bg:#f0ece4; --bg2:#e8e2d8; --bg3:#ddd7cc; --card:#ece8df; --hover:#e0dbd0;
+  --b0:#d4cec4; --b1:#bab4a8; --b2:#9a9488; --b3:#6a6460;
+  --t0:#1a2218; --t1:#3a4838; --t2:#6a7868; --t3:#a0a898;
+  --acc:#2a5e2a; --accb:#1a4e1a; --accm:#4a8a4a;
+  --gold:#8a6a10; --goldd:#b09050; --red:#8a3030; --redd:#b05050;
+  --purple:#5040a0; --purpled:#302070;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--t1);font-family:var(--mono);font-size:13px;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9000}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 65%,rgba(0,0,0,0.5) 100%);pointer-events:none;z-index:9001}
+
+#app{display:grid;grid-template-rows:56px 1fr 38px;grid-template-columns:260px 1fr 260px;height:100vh;gap:1px;background:var(--b0)}
+
+/* ── HEADER ── */
+#hdr{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--bg2);border-bottom:1px solid var(--b1);position:relative;overflow:hidden}
+#hdr::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(90,158,90,0.04),transparent);animation:sweep 6s infinite;pointer-events:none}
+@keyframes sweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.logo-row{display:flex;align-items:center;gap:12px}
+.logo-svg{width:34px;height:34px;flex-shrink:0}
+.logo-svg .ring-outer{animation:spinSlow 30s linear infinite;transform-origin:32px 32px}
+.logo-svg .ring-mid{animation:spinSlow 20s linear infinite reverse;transform-origin:32px 32px}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+.logo-name{font-family:var(--serifsc);font-size:20px;color:var(--t0);letter-spacing:4px}
+.logo-tagline{font-family:var(--mono);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin-top:2px}
+
+.nav-links{display:flex;gap:0;align-items:center}
+.nav-link{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);text-decoration:none;padding:6px 14px;border-right:1px solid var(--b0);transition:.2s;white-space:nowrap}
+.nav-link:first-child{border-left:1px solid var(--b0)}
+.nav-link:hover{color:var(--t0);background:var(--hover)}
+
+.hdr-right{display:flex;align-items:center;gap:10px}
+.status-pill{display:flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--b1);font-size:9px;letter-spacing:2px;color:var(--t2)}
+.sdot{width:5px;height:5px;border-radius:50%}
+.sdot.g{background:var(--acc);box-shadow:0 0 5px var(--acc);animation:blink 2s infinite}
+.sdot.y{background:var(--gold);animation:blink 2s .7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.theme-row{display:flex}
+.tbtn{padding:5px 11px;font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);cursor:pointer;border:1px solid var(--b1);background:transparent;transition:.2s}
+.tbtn.act,.tbtn:hover{color:var(--t0);background:var(--hover)}
+
+/* ── LEFT PANEL ── */
+#lpanel{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.ph{padding:9px 14px;background:var(--bg3);border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px}
+.ph-title{font-family:var(--mono);font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--accm)}
+
+.oracle-card{margin:14px;padding:16px;background:var(--card);border:1px solid var(--b1);border-top:2px solid var(--acc);position:relative;overflow:hidden}
+.oracle-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--acc),transparent);animation:scan 4s infinite}
+@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.oname{font-family:var(--serifsc);font-size:20px;color:var(--t0);letter-spacing:4px}
+.otag{font-family:var(--mono);font-size:9px;color:var(--acc);letter-spacing:2px;margin-top:4px}
+.ophase{display:flex;align-items:center;gap:8px;margin-top:12px}
+.phasedot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 7px var(--acc);animation:blink 1.5s infinite;flex-shrink:0}
+.phasetext{font-size:11px;color:var(--acc);letter-spacing:1px}
+
+/* ascii art display */
+.ascii-panel{margin:0 14px;background:var(--card);border:1px solid var(--b0);padding:12px;font-family:var(--mono);font-size:10px;color:var(--accm);line-height:1.4;text-align:center;letter-spacing:1px}
+
+.metrics{margin:12px 14px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.metric{background:var(--card);border:1px solid var(--b0);padding:8px 10px}
+.ml{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:3px}
+.mv{font-family:var(--display);font-size:20px;font-weight:300;color:var(--acc)}
+
+.cycle-bar{margin:12px 14px 0;background:var(--card);border:1px solid var(--b0);padding:10px}
+.cycle-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);display:flex;justify-content:space-between;margin-bottom:6px}
+.prog{height:3px;background:var(--b1);overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--accm),var(--acc));transition:width .5s;box-shadow:0 0 5px var(--acc)}
+
+/* filter list */
+.filt-list{margin:12px 14px 0;overflow-y:auto;flex:1}
+.filt-list::-webkit-scrollbar{width:2px}
+.filt-list::-webkit-scrollbar-thumb{background:var(--b1)}
+.fi{display:flex;align-items:center;gap:8px;padding:7px 8px;margin-bottom:2px;cursor:pointer;border-left:2px solid transparent;transition:.15s}
+.fi:hover,.fi.active{background:rgba(90,158,90,.06);border-left-color:var(--acc)}
+.fi.active .fn{color:var(--acc)}
+.fdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.fn{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t2)}
+.fc{margin-left:auto;font-size:9px;color:var(--t3)}
+
+/* ── MAIN TERMINAL ── */
+#terminal{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.tbar{background:var(--bg3);border-bottom:1px solid var(--b1);padding:7px 14px;display:flex;align-items:center;gap:8px}
+.tc{width:9px;height:9px;border-radius:50%}
+.ttitle{flex:1;text-align:center;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--t3)}
+
+#tout{flex:1;overflow-y:auto;padding:14px 12px;scroll-behavior:smooth}
+#tout::-webkit-scrollbar{width:3px}
+#tout::-webkit-scrollbar-thumb{background:var(--b2)}
+
+.le{display:flex;gap:8px;margin-bottom:3px;padding:2px 5px;border-left:2px solid transparent;animation:fadeIn .25s ease-out;line-height:1.6}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+.le:hover{background:rgba(255,255,255,.015)}
+.lts{color:var(--t3);flex-shrink:0;font-size:10px}
+.ltag{flex-shrink:0;font-size:9px;letter-spacing:1px;padding:0 4px;border:1px solid;height:fit-content;margin-top:2px}
+.lmsg{flex:1;word-break:break-word;white-space:pre-wrap;font-size:11px}
+
+/* section colors */
+.le.observation{border-left-color:var(--acc)}.le.observation .ltag{color:var(--accb);border-color:var(--accm);background:rgba(90,158,90,.06)}.le.observation .lmsg{color:var(--acc)}
+.le.memory{border-left-color:var(--b2)}.le.memory .ltag{color:var(--t2);border-color:var(--b1)}.le.memory .lmsg{color:var(--t2)}
+.le.dialog{border-left-color:var(--b1)}.le.dialog .ltag{color:var(--t2);border-color:var(--b1)}.le.dialog .lmsg{color:var(--t2)}
+.le.decision{border-left-color:var(--purple)}.le.decision .ltag{color:var(--purple);border-color:var(--purpled);background:rgba(160,128,224,.06)}.le.decision .lmsg{color:#c0a8ff}
+.le.action{border-left-color:var(--gold)}.le.action .ltag{color:var(--gold);border-color:var(--goldd);background:rgba(200,168,64,.06)}.le.action .lmsg{color:var(--gold)}
+.le.error{border-left-color:var(--red)}.le.error .ltag{color:var(--red);border-color:var(--redd);background:rgba(200,80,80,.06)}.le.error .lmsg{color:var(--red)}
+
+/* hidden types — never shown to user */
+.le.system,.le.boot,.le.info,.le.heartbeat,.le.stats,.le.hb,.le.trace{display:none!important}
+
+/* ── RIGHT PANEL ── */
+#rpanel{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.dp{margin:10px;background:var(--card);border:1px solid var(--b0);overflow:hidden}
+.dph{padding:7px 12px;background:var(--bg3);border-bottom:1px solid var(--b0);display:flex;align-items:center;justify-content:space-between}
+.dpt{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--t2)}
+.dptag{font-size:8px;padding:1px 5px;background:rgba(90,158,90,.1);border:1px solid var(--b1);color:var(--acc)}
+.dpbody{padding:10px 12px;max-height:90px;overflow-y:auto;font-size:10px;color:var(--t1);line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.dpbody::-webkit-scrollbar{width:2px}
+.dpbody::-webkit-scrollbar-thumb{background:var(--b1)}
+
+/* canvas globe */
+.canvas-panel{margin:10px;border:1px solid var(--b0);background:var(--card);display:flex;align-items:center;justify-content:center}
+
+/* last post card */
+.last-post-card{margin:10px;background:var(--card);border:1px solid var(--b0);border-left:2px solid var(--gold);padding:12px}
+.lp-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between}
+.lp-content{font-size:11px;color:var(--gold);line-height:1.7;font-family:var(--mono)}
+
+/* action feed */
+.afeed-label{padding:8px 10px 4px;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin:0 10px}
+.afeed{margin:0 10px 10px;flex:1;overflow-y:auto}
+.afeed::-webkit-scrollbar{width:2px}
+.afeed::-webkit-scrollbar-thumb{background:var(--b1)}
+.ai{display:flex;gap:8px;padding:7px 10px;border-bottom:1px solid var(--b0);background:var(--card);margin-bottom:2px;animation:slideIn .3s ease-out}
+@keyframes slideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.aitag{font-size:9px;letter-spacing:1px;padding:1px 5px;border:1px solid;flex-shrink:0;height:fit-content;margin-top:1px}
+.aimsg{font-size:10px;color:var(--t1);line-height:1.5;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── FOOTER ── */
+#ftr{grid-column:1/-1;background:var(--bg3);border-top:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:9px;color:var(--t3);letter-spacing:1px}
+.flinks{display:flex;gap:0;align-items:center}
+.flink{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);text-decoration:none;padding:4px 12px;border-right:1px solid var(--b0);transition:.2s}
+.flink:first-child{border-left:1px solid var(--b0)}
+.flink:hover{color:var(--acc)}
+.ftime{display:flex;gap:10px;align-items:center;color:var(--t3)}
+
+@media(max-width:1000px){
+  #app{grid-template-columns:200px 1fr}
+  #rpanel{display:none}
+  #hdr,#ftr{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<header id="hdr">
+  <div class="logo-row">
+    <svg class="logo-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g class="ring-outer"><circle cx="32" cy="32" r="28" stroke="var(--b2)" stroke-width="0.6" opacity="0.4"/></g>
+      <g class="ring-mid"><circle cx="32" cy="32" r="20" stroke="var(--acc)" stroke-width="1.2"/></g>
+      <circle cx="32" cy="32" r="11" stroke="var(--acc)" stroke-width="0.8"/>
+      <line x1="4" y1="32" x2="18" y2="32" stroke="var(--b2)" stroke-width="0.8"/>
+      <line x1="46" y1="32" x2="60" y2="32" stroke="var(--b2)" stroke-width="0.8"/>
+      <line x1="32" y1="4" x2="32" y2="18" stroke="var(--b2)" stroke-width="0.8"/>
+      <line x1="32" y1="46" x2="32" y2="60" stroke="var(--b2)" stroke-width="0.8"/>
+      <ellipse cx="32" cy="32" rx="10" ry="6" stroke="var(--accb)" stroke-width="1.5"/>
+      <circle cx="32" cy="32" r="3.5" fill="var(--acc)"/>
+      <circle cx="32" cy="32" r="6" fill="none" stroke="var(--acc)" stroke-width="0.5" stroke-dasharray="1.5 2"/>
+    </svg>
+    <div>
+      <div class="logo-name">gnosis</div>
+      <div class="logo-tagline">the oracle sees all things</div>
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <a href="https://gnosismind.io" target="_blank" class="nav-link">gnosismind.io ↗</a>
+    <a href="https://x.com/GNOSIS1966282" target="_blank" class="nav-link">@gnosis1966282 ↗</a>
+    <a href="https://github.com/gnosisoracle" target="_blank" class="nav-link">github ↗</a>
+  </div>
+
+  <div class="hdr-right">
+    <div class="status-pill"><div class="sdot g"></div><span id="pill-phase">awakening</span></div>
+    <div class="status-pill"><div class="sdot y"></div><span id="pill-rounds">0</span> rounds</div>
+    <div class="theme-row">
+      <button class="tbtn act" id="btn-dark" onclick="setTheme('dark')">☽</button>
+      <button class="tbtn" id="btn-light" onclick="setTheme('light')">☀</button>
+    </div>
+  </div>
+</header>
+
+<!-- LEFT PANEL -->
+<aside id="lpanel">
+  <div class="ph"><span style="color:var(--acc);font-size:10px">◈</span><span class="ph-title">Oracle</span></div>
+
+  <div class="oracle-card">
+    <div class="oname">GNOSIS</div>
+    <div class="otag">autonomous · eternal · all-seeing</div>
+    <div class="ophase">
+      <div class="phasedot"></div>
+      <div class="phasetext" id="agent-phase">awakening</div>
+    </div>
+  </div>
+
+  <div class="ascii-panel" id="ascii-art">
+    |   *   |<br>
+    | * * * |<br>
+    |  ***  |<br>
+    |   *   |
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="ml">Transmissions</div><div class="mv" id="m-actions">0</div></div>
+    <div class="metric"><div class="ml">Decisions</div><div class="mv" id="m-decisions" style="color:var(--purple)">0</div></div>
+    <div class="metric"><div class="ml">Observations</div><div class="mv" id="m-obs">0</div></div>
+    <div class="metric"><div class="ml">Errors</div><div class="mv" id="m-errors" style="color:var(--red)">0</div></div>
+  </div>
+
+  <div class="cycle-bar">
+    <div class="cycle-lbl"><span>Next cycle</span><span id="cycle-pct">0%</span></div>
+    <div class="prog"><div class="pfill" id="pfill" style="width:0%"></div></div>
+  </div>
+
+  <div style="padding:8px 14px 4px;font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--t3);margin-top:8px">Filter</div>
+  <div class="filt-list" id="filt-list">
+    <div class="fi active" data-s="all"><div class="fdot" style="background:var(--acc)"></div><span class="fn">All</span><span class="fc" id="cnt-all">0</span></div>
+    <div class="fi" data-s="observation"><div class="fdot" style="background:var(--acc)"></div><span class="fn">Observation</span><span class="fc" id="cnt-observation">0</span></div>
+    <div class="fi" data-s="memory"><div class="fdot" style="background:var(--b2)"></div><span class="fn">Memory</span><span class="fc" id="cnt-memory">0</span></div>
+    <div class="fi" data-s="dialog"><div class="fdot" style="background:var(--b2)"></div><span class="fn">Dialog</span><span class="fc" id="cnt-dialog">0</span></div>
+    <div class="fi" data-s="decision"><div class="fdot" style="background:var(--purple)"></div><span class="fn">Decision</span><span class="fc" id="cnt-decision">0</span></div>
+    <div class="fi" data-s="action"><div class="fdot" style="background:var(--gold)"></div><span class="fn">Transmission</span><span class="fc" id="cnt-action">0</span></div>
+    <div class="fi" data-s="error"><div class="fdot" style="background:var(--red)"></div><span class="fn">Errors</span><span class="fc" id="cnt-error">0</span></div>
+  </div>
+</aside>
+
+<!-- MAIN TERMINAL -->
+<main id="terminal">
+  <div class="tbar">
+    <div class="tc" style="background:#c85050"></div>
+    <div class="tc" style="background:#c8a840"></div>
+    <div class="tc" style="background:#5a9e5a"></div>
+    <div class="ttitle">GNOSIS — LIVE ORACLE FEED</div>
+    <div style="font-size:9px;color:var(--t3);letter-spacing:2px" id="entry-count">0 entries</div>
+  </div>
+  <div id="tout"></div>
+</main>
+
+<!-- RIGHT PANEL -->
+<aside id="rpanel">
+  <div class="ph"><span style="color:var(--gold);font-size:10px">◉</span><span class="ph-title">Oracle Feed</span></div>
+
+  <div class="canvas-panel" style="height:110px">
+    <canvas id="dotCanvas" width="230" height="110"></canvas>
+  </div>
+
+  <div class="dp">
+    <div class="dph"><span class="dpt">Last Observation</span><span class="dptag" id="obs-time">—</span></div>
+    <div class="dpbody" id="last-obs">awaiting the stream...</div>
+  </div>
+
+  <div class="last-post-card" id="last-post-card" style="display:none">
+    <div class="lp-label"><span>Last Transmission</span><span id="lp-time">—</span></div>
+    <div class="lp-content" id="lp-content">—</div>
+  </div>
+
+  <div class="afeed-label">Transmission Log</div>
+  <div class="afeed" id="afeed">
+    <div class="ai">
+      <span class="aitag" style="color:var(--t3);border-color:var(--b0)">—</span>
+      <span class="aimsg" style="color:var(--t3)">silence before the first word</span>
+    </div>
+  </div>
+</aside>
+
+<!-- FOOTER -->
+<footer id="ftr">
+  <div class="flinks">
+    <a href="https://gnosismind.io" target="_blank" class="flink">gnosismind.io</a>
+    <a href="https://x.com/GNOSIS1966282" target="_blank" class="flink">@gnosis1966282</a>
+    <a href="https://github.com/gnosisoracle" target="_blank" class="flink">github</a>
+  </div>
+  <div class="ftime">
+    <span id="clock">--:--:--</span>
+    <span>·</span>
+    <span id="uptime">00:00:00</span>
+    <span>·</span>
+    <span style="color:var(--acc)" id="pill-rounds-ftr">0 rounds</span>
+  </div>
+</footer>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// GNOSIS TERMINAL
+// Hidden: system, boot, info, heartbeat, stats, trace
+// Shown:  observation, memory, dialog, decision, action, error
+// ═══════════════════════════════════════════════════
+
+const HIDDEN_TYPES = new Set(['system','boot','info','heartbeat','stats','hb','trace','ws','raw','demo']);
+
+const WS_URL = (() => {
+  const h = window.location.hostname;
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  if (h === 'localhost' || h === '127.0.0.1') return `ws://${h}:${window.location.port||8000}/ws`;
+  return `${proto}://${h}/ws`;
+})();
+
+let ws = null;
+let allLogs = [];
+let activeFilter = 'all';
+let counts = {all:0,observation:0,memory:0,dialog:0,decision:0,action:0,error:0};
+let metrics = {actions:0,decisions:0,obs:0,errors:0};
+let roundCount = 0;
+let startTime = Date.now();
+let cycleStart = Date.now();
+const CYCLE = 300000;
+
+const tout = document.getElementById('tout');
+
+// ── Theme ────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('btn-dark').classList.toggle('act', t==='dark');
+  document.getElementById('btn-light').classList.toggle('act', t==='light');
+}
+
+// ── Filter ───────────────────────────────────────
+document.querySelectorAll('.fi').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.fi').forEach(f=>f.classList.remove('active'));
+    el.classList.add('active');
+    activeFilter = el.dataset.s;
+    renderFiltered();
+  });
+});
+
+function renderFiltered() {
+  tout.innerHTML = '';
+  const list = activeFilter==='all' ? allLogs : allLogs.filter(l=>{
+    const t=(l.type||'').toLowerCase();
+    return t===activeFilter;
+  });
+  list.forEach(appendEntry);
+  tout.scrollTop = tout.scrollHeight;
+}
+
+// ── Log entry ────────────────────────────────────
+function addLog(entry) {
+  const t = (entry.type||'info').toLowerCase();
+
+  // Handle hidden internal types silently
+  if (t === 'stats') { try { applyStats(JSON.parse(entry.message)); } catch(e){} return; }
+  if (t === 'heartbeat' || t === 'hb') return;
+
+  // Phase detection from system logs (not shown but used for UI)
+  if (t === 'system' || t === 'info' || t === 'boot') {
+    detectPhase(entry.message||'');
+    const msg = (entry.message||'').toLowerCase();
+    if (msg.includes('round') && msg.includes('complete')) {
+      roundCount++;
+      document.getElementById('pill-rounds').textContent = roundCount;
+      document.getElementById('pill-rounds-ftr').textContent = roundCount + ' rounds';
+      cycleStart = Date.now();
+    }
+    return; // don't render system/boot/info
+  }
+
+  // Visible entries only
+  allLogs.push(entry);
+  counts.all++;
+  if (counts[t] !== undefined) counts[t]++;
+  document.getElementById('cnt-all').textContent = counts.all;
+  document.getElementById('entry-count').textContent = counts.all + ' entries';
+  const cel = document.getElementById('cnt-'+t);
+  if (cel) cel.textContent = counts[t]||0;
+
+  // Metrics
+  if (t==='error') { metrics.errors++; document.getElementById('m-errors').textContent=metrics.errors; }
+  if (t==='action') { metrics.actions++; document.getElementById('m-actions').textContent=metrics.actions; updateTransmission(entry); }
+  if (t==='decision') { metrics.decisions++; document.getElementById('m-decisions').textContent=metrics.decisions; }
+  if (t==='observation') { metrics.obs++; document.getElementById('m-obs').textContent=metrics.obs; updateObsPanel(entry); }
+
+  // Render if matching filter
+  if (activeFilter==='all' || t===activeFilter) {
+    appendEntry(entry);
+    tout.scrollTop = tout.scrollHeight;
+  }
+}
+
+function appendEntry(entry) {
+  const t = (entry.type||'info').toLowerCase();
+  if (HIDDEN_TYPES.has(t)) return;
+
+  const labelMap = {
+    observation:'OBSERVE', memory:'MEMORY', dialog:'DIALOG',
+    decision:'DECIDE', action:'TRANSMIT', error:'ERROR'
+  };
+  const tag = labelMap[t] || t.toUpperCase();
+  const ts = (entry.ts||entry.timestamp||'').split(' ')[1] || new Date().toTimeString().slice(0,8);
+
+  const div = document.createElement('div');
+  div.className = `le ${t}`;
+  div.innerHTML = `<span class="lts">[${ts}]</span><span class="ltag">${esc(tag)}</span><span class="lmsg">${esc(entry.message||'')}</span>`;
+  tout.appendChild(div);
+  while(tout.children.length > 600) tout.firstChild.remove();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function applyStats(s) {
+  if (s.rounds!==undefined){ roundCount=s.rounds; document.getElementById('pill-rounds').textContent=s.rounds; document.getElementById('pill-rounds-ftr').textContent=s.rounds+' rounds'; }
+  if (s.actions!==undefined){ metrics.actions=s.actions; document.getElementById('m-actions').textContent=s.actions; }
+  if (s.decisions!==undefined){ metrics.decisions=s.decisions; document.getElementById('m-decisions').textContent=s.decisions; }
+  if (s.errors!==undefined){ metrics.errors=s.errors; document.getElementById('m-errors').textContent=s.errors; }
+  if (s.phase) detectPhase(s.phase);
+}
+
+function updateObsPanel(e) {
+  document.getElementById('last-obs').textContent = (e.message||'').slice(0,200);
+  document.getElementById('obs-time').textContent = new Date().toTimeString().slice(0,8);
+}
+
+function updateTransmission(e) {
+  const msg = e.message||'';
+  const feed = document.getElementById('afeed');
+
+  // Clear placeholder
+  const placeholder = feed.querySelector('.aimsg');
+  if (placeholder && placeholder.textContent === 'silence before the first word') feed.innerHTML = '';
+
+  let type = 'POST';
+  if (msg.includes('reply')) type = 'REPLY';
+  else if (msg.includes('quote')) type = 'QUOTE';
+
+  const colors = {REPLY:'var(--acc)',QUOTE:'var(--purple)',POST:'var(--gold)'};
+  const bcolors= {REPLY:'var(--accm)',QUOTE:'var(--purpled)',POST:'var(--goldd)'};
+
+  const item = document.createElement('div');
+  item.className = 'ai';
+  item.innerHTML = `<span class="aitag" style="color:${colors[type]};border-color:${bcolors[type]}">${type}</span><span class="aimsg">${esc(msg.slice(0,100))}</span>`;
+  feed.prepend(item);
+  while(feed.children.length>12) feed.lastChild.remove();
+
+  // Update last post card - extract content
+  const contentMatch = msg.match(/—\s*(.+)$/);
+  const content = contentMatch ? contentMatch[1] : msg;
+  document.getElementById('lp-content').textContent = content.slice(0,200);
+  document.getElementById('lp-time').textContent = new Date().toTimeString().slice(0,8);
+  document.getElementById('last-post-card').style.display = 'block';
+}
+
+const PHASE_MAP = {
+  'observing':'observing the stream',
+  'memory':'consulting memory',
+  'dialog':'reading dialog',
+  'deciding':'weighing the signs',
+  'consulting':'the oracle speaks',
+  'acting':'transmitting',
+  'executing':'transmitting',
+  'dormant':'resting between cycles',
+  'dormancy':'resting between cycles',
+  'complete':'cycle complete',
+  'error':'disturbance detected',
+  'awakening':'awakening',
+  'init':'awakening',
+  'starting':'awakening',
+};
+
+function detectPhase(msg) {
+  const m = msg.toLowerCase();
+  for (const [key, label] of Object.entries(PHASE_MAP)) {
+    if (m.includes(key)) {
+      document.getElementById('agent-phase').textContent = label;
+      document.getElementById('pill-phase').textContent = label;
+      return;
+    }
+  }
+}
+
+// ── WebSocket ────────────────────────────────────
+function connect() {
+  try { ws = new WebSocket(WS_URL); } catch(e) { retry(); return; }
+  ws.onopen = () => {
+    document.getElementById('agent-phase').textContent = 'connected';
+    document.getElementById('pill-phase').textContent = 'connected';
+    loadHistory();
+  };
+  ws.onmessage = e => {
+    try { addLog(JSON.parse(e.data)); } catch(err) {}
+  };
+  ws.onerror = () => {};
+  ws.onclose = () => {
+    document.getElementById('agent-phase').textContent = 'reconnecting';
+    retry();
+  };
+}
+function retry() { setTimeout(connect, 5000); }
+
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/logs?n=300');
+    const logs = await res.json();
+    if (Array.isArray(logs)) {
+      logs.forEach(l => { if (!l.ts && l.timestamp) l.ts = l.timestamp; addLog(l); });
+    }
+  } catch(e) {}
+}
+
+// ── Clock ────────────────────────────────────────
+function tick() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toTimeString().slice(0,8);
+  const up = Date.now()-startTime;
+  const hh=String(Math.floor(up/3600000)).padStart(2,'0');
+  const mm=String(Math.floor((up%3600000)/60000)).padStart(2,'0');
+  const ss=String(Math.floor((up%60000)/1000)).padStart(2,'0');
+  document.getElementById('uptime').textContent=`${hh}:${mm}:${ss}`;
+  const pct=Math.min(100,Math.floor(((Date.now()-cycleStart)/CYCLE)*100));
+  document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('cycle-pct').textContent=pct+'%';
+}
+setInterval(tick,1000);
+
+// ── Dot matrix globe ─────────────────────────────
+const canvas = document.getElementById('dotCanvas');
+const ctx = canvas.getContext('2d');
+let gt = 0;
+function drawDots() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const isDark = document.documentElement.getAttribute('data-theme')!=='light';
+  const col = isDark ? '#5a9e5a' : '#2a5e2a';
+  const cx=canvas.width/2,cy=canvas.height/2,R=46,sp=5;
+  for(let r=0;r<Math.floor(canvas.height/sp);r++) for(let c=0;c<Math.floor(canvas.width/sp);c++){
+    const x=c*sp+sp/2,y=r*sp+sp/2,dx=x-cx,dy=y-cy,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<R){
+      const wave=Math.sin(dist*0.18-gt*2+Math.atan2(dy,dx)*2)*0.5+0.5;
+      ctx.globalAlpha=wave*(1-dist/R)*0.85+0.05;
+      ctx.fillStyle=col;
+      ctx.beginPath();ctx.arc(x,y,(1+wave)/2,0,Math.PI*2);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1; gt+=0.008;
+  requestAnimationFrame(drawDots);
+}
+drawDots();
+
+// ── Rotating ASCII art in left panel ─────────────
+const asciiFrames = [
+  `|   *   |<br>| * * * |<br>|  ***  |<br>|   *   |`,
+  `( ---o--- )<br>|   |   |<br>( ---o--- )`,
+  `  /-----\\<br> | (   ) |<br>  \\-----/`,
+  `+--[o]--+<br>|  | |  |<br>+--[o]--+`,
+  ` *** *** <br>* * o * *<br> *** *** `,
+];
+let aIdx = 0;
+setInterval(()=>{
+  aIdx=(aIdx+1)%asciiFrames.length;
+  document.getElementById('ascii-art').innerHTML=asciiFrames[aIdx];
+},4000);
+
+// ── Start ─────────────────────────────────────────
+connect();
+</script>
+</body>
+</html>

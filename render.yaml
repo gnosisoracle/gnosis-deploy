@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: gnosis-oracle
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python server.py
+    disk:
+      name: gnosis-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: TWITTER_user_name
+        sync: false
+      - key: TWITTER_email
+        sync: false
+      - key: TWITTER_pwd
+        sync: false
+      - key: TWITTER_API_CONSUMER_KEY
+        sync: false
+      - key: TWITTER_API_CONSUMER_SECRET
+        sync: false
+      - key: TWITTER_API_BEARER_TOKEN
+        sync: false
+      - key: TWITTER_API_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_API_ACCESS_TOKEN_SECRET
+        sync: false
+      - key: PORT
+        value: "8000"
+      - key: DATA_DIR
+        value: "/data"
+      - key: CHROME_BINARY_PATH
+        value: "/usr/bin/google-chrome-stable"
