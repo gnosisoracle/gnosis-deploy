@@ -660,18 +660,25 @@ function appendEntry(entry) {
   const div = document.createElement('div');
   div.className = `le ${t}`;
 
-  let body = esc(msg);
+  // Render \n as real line breaks — escape first then convert
+  function renderBody(raw) {
+    return esc(raw)
+      .replace(/\\n/g, '\n')   // literal \n from JSON string
+      .replace(/\n/g, '<br>'); // actual newlines
+  }
+
+  let body = renderBody(msg);
 
   if(t==='transmit') {
-    // Extract post ID from message if present (format: "tweet_id:XXXXX")
-    const idFromMsg = msg.match(/(\d{15,})/);
-    // Build best possible X URL
-    const card = allTxCards[allTxCards.length-1];
-    const postId = card?.postId || (idFromMsg?.[1]) || '';
-    const xUrl = postId
+    // Extract tweet_id from message log (format: tweet_id=XXXXX)
+    const idMatch = msg.match(/tweet_id=(\d{15,})/);
+    const postId  = idMatch?.[1] || '';
+    const xUrl    = postId
       ? `https://x.com/GNOSIS1966282/status/${postId}`
       : `https://x.com/GNOSIS1966282`;
-    body = esc(msg) + `<a class="xbtn" href="${xUrl}" target="_blank" rel="noopener">↗ view post</a>`;
+    // Strip the tweet_id meta suffix from displayed text
+    const displayMsg = msg.replace(/\s*\|\s*tweet_id=\S+\s*\|\s*https?:\/\/\S+/,'').trim();
+    body = renderBody(displayMsg) + `<a class="xbtn" href="${xUrl}" target="_blank" rel="noopener">↗ view post</a>`;
   }
 
   div.innerHTML = `<span class="le-ts">${esc(ts)}</span><span class="le-tag">${tag}</span><span class="le-body">${body}</span>`;
@@ -701,18 +708,26 @@ function addTxCard(entry) {
   if(ml.startsWith('reply')||ml.includes(' replied')) type='reply';
   else if(ml.includes('quote')) type='quote';
 
-  // Extract content after "post — " or "reply — " etc
-  const m = msg.match(/(?:post|reply|quote|tweeted)[:\s\u2014\-]+(.+)/si);
-  const content = m ? m[1].trim() : msg;
+  // Strip meta suffix (tweet_id=... | https://...)
+  const cleanMsg = msg.replace(/\s*\|\s*tweet_id=\S+\s*\|\s*https?:\/\/\S+/,'').trim();
 
-  // Try to find tweet ID in message
-  const idMatch = msg.match(/status\/(\d{15,})/);
-  const postId = idMatch?.[1] || '';
-  allTxCards.push({content, ts, type, postId});
+  // Extract content after "post — " / "reply — " etc
+  const m = cleanMsg.match(/(?:post|reply|quote|tweeted)[:\s\u2014\-]+(.+)/si);
+  const content = m ? m[1].trim() : cleanMsg;
 
-  const xUrl = postId
+  // Extract tweet ID for real post link
+  const idMatch = msg.match(/tweet_id=(\d{15,})/);
+  const postId  = idMatch?.[1] || '';
+  const xUrl    = postId
     ? `https://x.com/GNOSIS1966282/status/${postId}`
     : `https://x.com/GNOSIS1966282`;
+
+  allTxCards.push({content, ts, type, postId});
+
+  // Render \n as line breaks
+  const rendered = esc(content)
+    .replace(/\\n/g,'\n')
+    .replace(/\n/g,'<br>');
 
   const card = document.createElement('div');
   card.className = 'txc';
@@ -721,7 +736,7 @@ function addTxCard(entry) {
       <span class="txc-tp ${type}">${type.toUpperCase()}</span>
       <span class="txc-ts">${esc(ts)}</span>
     </div>
-    <div class="txc-body">${esc(content)}</div>
+    <div class="txc-body">${rendered}</div>
     <a class="txc-link" href="${xUrl}" target="_blank" rel="noopener">↗ view on x.com</a>
   `;
   txs.insertBefore(card, txs.firstChild);
